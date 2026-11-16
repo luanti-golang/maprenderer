@@ -3,7 +3,7 @@ package maprenderer
 import (
 	"image/color"
 
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/types"
 )
 
 type NodeWithColor struct {

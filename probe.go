@@ -3,7 +3,7 @@ package maprenderer
 import (
 	"fmt"
 
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/types"
 )
 
 func Probe(min, max, pos, ipos *types.Pos, na types.NodeAccessor, cr types.ColorResolver, skip_alpha bool) ([]*NodeWithColor, error) {

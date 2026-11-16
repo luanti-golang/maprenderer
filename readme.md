@@ -1,7 +1,7 @@
 
-Minetest map renderer go-library and cli
+Luanti map renderer go-library and cli
 
-![](https://github.com/minetest-go/maprenderer/workflows/test/badge.svg)
+![](https://github.com/luanti-golang/maprenderer/workflows/test/badge.svg)
 
 # Usage
 
@@ -13,7 +13,7 @@ Minetest map renderer go-library and cli
 ## Isometric map
 
 ```sh
-./maprenderer -world /home/user/.minetest/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type isometric
+./maprenderer -world /home/user/.luanti/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type isometric
 ```
 
 Example output:
@@ -23,7 +23,7 @@ Example output:
 ## Flat map
 
 ```sh
-./maprenderer -world /home/user/.minetest/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type map
+./maprenderer -world /home/user/.luanti/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type map
 ```
 
 ![](./map_example.png)
@@ -38,7 +38,7 @@ nc_terrain:cobble 10 20 30
 
 # Binary downloads
 
-See: https://github.com/minetest-go/maprenderer/releases
+See: https://github.com/luanti-golang/maprenderer/releases
 
 # License
 

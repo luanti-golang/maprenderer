@@ -5,7 +5,7 @@ import (
 	"image"
 	"slices"
 
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/types"
 )
 
 type IsoRenderOpts struct {

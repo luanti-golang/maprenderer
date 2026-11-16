@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/minetest-go/colormapping"
-	"github.com/minetest-go/maprenderer"
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/colormapping"
+	"github.com/luanti-golang/maprenderer"
+	"github.com/luanti-golang/types"
 	"github.com/stretchr/testify/assert"
 )
 

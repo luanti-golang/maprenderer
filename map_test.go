@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/minetest-go/mapparser"
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/mapparser"
+	"github.com/luanti-golang/types"
 )
 
 func NewMap() *Map {

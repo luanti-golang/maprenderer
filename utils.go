@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/types"
 )
 
 func GetIsometricImageSize(size *types.Pos, cube_len int) (int, int) {

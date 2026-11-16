@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
-	"github.com/minetest-go/colormapping"
-	"github.com/minetest-go/mapparser"
-	"github.com/minetest-go/maprenderer"
-	"github.com/minetest-go/mtdb"
-	"github.com/minetest-go/mtdb/block"
-	"github.com/minetest-go/types"
+	"github.com/luanti-golang/colormapping"
+	"github.com/luanti-golang/mapparser"
+	"github.com/luanti-golang/maprenderer"
+	"github.com/luanti-golang/mtdb"
+	"github.com/luanti-golang/mtdb/block"
+	"github.com/luanti-golang/types"
 )
 
 var (
