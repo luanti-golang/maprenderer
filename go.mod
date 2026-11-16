@@ -1,3 +1,4 @@
+// Deprecated: this module has moved to github.com/luanti-golang/maprenderer
 module github.com/minetest-go/maprenderer
 
 go 1.22.4
