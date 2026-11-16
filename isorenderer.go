@@ -26,7 +26,7 @@ func RenderIsometric(na types.NodeAccessor, cr types.ColorResolver, from, to *ty
 	}
 
 	min, max := types.SortPos(from, to)
-	size := to.Subtract(from).Add(types.NewPos(1, 1, 1))
+	size := max.Subtract(min).Add(types.NewPos(1, 1, 1))
 
 	width, height := GetIsometricImageSize(size, opts.CubeLen)
 	center_x, center_y := GetIsoCenterCubeOffset(size, opts.CubeLen)

@@ -47,12 +47,12 @@ func parsePos(str string) (*types.Pos, error) {
 
 	y, err := strconv.ParseInt(parts[1], 10, 32)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse y-component: '%s'", parts[0])
+		return nil, fmt.Errorf("could not parse y-component: '%s'", parts[1])
 	}
 
 	z, err := strconv.ParseInt(parts[2], 10, 32)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse z-component: '%s'", parts[0])
+		return nil, fmt.Errorf("could not parse z-component: '%s'", parts[2])
 	}
 
 	return types.NewPos(int(x), int(y), int(z)), nil
@@ -181,12 +181,19 @@ func main() {
 		panic(err)
 	}
 
-	f, err := os.OpenFile(*output, os.O_CREATE|os.O_RDWR, 0755)
+	// create or truncate the output file
+	f, err := os.Create(*output)
 	if err != nil {
 		panic(err)
 	}
 
 	err = png.Encode(f, img)
+	if err != nil {
+		f.Close()
+		panic(err)
+	}
+
+	err = f.Close()
 	if err != nil {
 		panic(err)
 	}

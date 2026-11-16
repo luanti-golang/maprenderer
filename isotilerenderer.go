@@ -24,7 +24,7 @@ func RenderIsometricTile(na types.NodeAccessor, cr types.ColorResolver, from, to
 	}
 
 	min, max := types.SortPos(from, to)
-	size := to.Subtract(from).Add(types.NewPos(1, 1, 1))
+	size := max.Subtract(min).Add(types.NewPos(1, 1, 1))
 	top_size := types.NewPos(size.X(), 1, size.Z())
 
 	// extend the bounds for probing

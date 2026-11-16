@@ -2,6 +2,7 @@ package maprenderer
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/luanti-golang/types"
 )
@@ -73,7 +74,8 @@ func RenderMap(na types.NodeAccessor, cr types.ColorResolver, from, to *types.Po
 				}
 			}
 
-			img.Set(x-from.X(), to.Z()-z, *c)
+			// the color values are not alpha-premultiplied, set them as-is
+			img.SetNRGBA(x-from.X(), to.Z()-z, color.NRGBA{R: c.R, G: c.G, B: c.B, A: c.A})
 		}
 	}
 
