@@ -85,7 +85,7 @@ func RenderIsometric(na types.NodeAccessor, cr types.ColorResolver, from, to *ty
 		c3 := ColorAdjust(c1, 10)
 
 		x, y := GetIsoCubePosition(center_x, center_y, opts.CubeLen, rel_pos)
-		err := DrawIsoCube(img, opts.CubeLen, x, y, c1, c2, c3)
+		err := DrawIsoCube(img, opts.CubeLen, x, y, toNRGBA(c1), toNRGBA(c2), toNRGBA(c3))
 		if err != nil {
 			return nil, fmt.Errorf("DrawIsoCube error: %v", err)
 		}

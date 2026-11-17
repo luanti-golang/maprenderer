@@ -44,6 +44,45 @@ func GetIsoCubePosition(center_x, center_y, cube_len int, pos *types.Pos) (int, 
 	return x, y
 }
 
+// premultipliedColor holds alpha-premultiplied 16-bit color components, as returned by color.Color.RGBA()
+type premultipliedColor struct {
+	r, g, b, a uint32
+}
+
+func newPremultipliedColor(c color.Color) premultipliedColor {
+	r, g, b, a := c.RGBA()
+	return premultipliedColor{r: r, g: g, b: b, a: a}
+}
+
+// blendPixel composites the color over the existing pixel (porter-duff "over")
+func blendPixel(img *image.RGBA, x, y int, c premultipliedColor) {
+	if !(image.Point{X: x, Y: y}.In(img.Rect)) {
+		return
+	}
+	i := img.PixOffset(x, y)
+	pix := img.Pix[i : i+4 : i+4]
+
+	if c.a == 0xffff {
+		// opaque, plain overwrite
+		pix[0] = uint8(c.r >> 8)
+		pix[1] = uint8(c.g >> 8)
+		pix[2] = uint8(c.b >> 8)
+		pix[3] = uint8(c.a >> 8)
+		return
+	}
+
+	// same formula as image/draw with draw.Over
+	ia := 0xffff - c.a
+	pix[0] = uint8((uint32(pix[0])*0x101*ia/0xffff + c.r) >> 8)
+	pix[1] = uint8((uint32(pix[1])*0x101*ia/0xffff + c.g) >> 8)
+	pix[2] = uint8((uint32(pix[2])*0x101*ia/0xffff + c.b) >> 8)
+	pix[3] = uint8((uint32(pix[3])*0x101*ia/0xffff + c.a) >> 8)
+}
+
+// DrawIsoCube draws an isometric cube with its top-left corner at the given offset.
+// The cube is composited over the existing image content ("over" operator), so translucent colors
+// let the already drawn content shine through. Colors are interpreted according to their color.Color
+// implementation, use color.NRGBA for non-premultiplied colors.
 func DrawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, c1, c2, c3 color.Color) error {
 	if cube_len%4 != 0 {
 		return fmt.Errorf("cube_len must be divisible by 4")
@@ -51,6 +90,10 @@ func DrawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, c1, c2, c3 c
 	if cube_len <= 4 {
 		return fmt.Errorf("cube_len must be greater than 4")
 	}
+
+	pc1 := newPremultipliedColor(c1)
+	pc2 := newPremultipliedColor(c2)
+	pc3 := newPremultipliedColor(c3)
 
 	half_len_zero_indexed := (cube_len / 2) - 1
 	quarter_len := cube_len / 4
@@ -60,9 +103,9 @@ func DrawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, c1, c2, c3 c
 	for x := 0; x <= half_len_zero_indexed; x++ {
 		for y := 0; y <= half_len_zero_indexed; y++ {
 			// left
-			img.Set(x_offset+x, y_offset+y+quarter_len+yo, c1)
+			blendPixel(img, x_offset+x, y_offset+y+quarter_len+yo, pc1)
 			// right
-			img.Set(x_offset+cube_len-1-x, y_offset+y+quarter_len+yo, c2)
+			blendPixel(img, x_offset+cube_len-1-x, y_offset+y+quarter_len+yo, pc2)
 		}
 		if x%2 == 0 {
 			yo = yo + 1
@@ -75,9 +118,9 @@ func DrawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, c1, c2, c3 c
 	for x := 0; x <= half_len_zero_indexed-1; x++ {
 		for y := 0; y <= yl; y++ {
 			// left
-			img.Set(x_offset+1+x, y_offset+quarter_len-1-yo+y, c3)
+			blendPixel(img, x_offset+1+x, y_offset+quarter_len-1-yo+y, pc3)
 			// right
-			img.Set(x_offset+cube_len-2-x, y_offset+quarter_len-1-yo+y, c3)
+			blendPixel(img, x_offset+cube_len-2-x, y_offset+quarter_len-1-yo+y, pc3)
 		}
 		if x%2 != 0 {
 			yo = yo + 1
@@ -112,15 +155,28 @@ func ColorAdjust(c *color.RGBA, value int) *color.RGBA {
 	}
 }
 
+// BlendColor composites the non-premultiplied fg color over bg ("over" operator).
+// The alpha of the foreground color is divided by bf to make stacked translucent nodes less dominant.
 func BlendColor(bg, fg *color.RGBA, bf float64) *color.RGBA {
-	a := float64(fg.A) / 255 / bf
-	ai := 1 - a
+	fa := float64(fg.A) / 255 / bf
+	ba := float64(bg.A) / 255
+	// contribution of the background after being covered by the foreground
+	bw := ba * (1 - fa)
+	oa := fa + bw
+
+	if oa <= 0 {
+		return &color.RGBA{}
+	}
+
+	blend := func(f, b uint8) uint8 {
+		return uint8((float64(f)*fa + float64(b)*bw) / oa)
+	}
 
 	return &color.RGBA{
-		R: uint8((float64(fg.R) * a) + (float64(bg.R) * ai)),
-		G: uint8((float64(fg.G) * a) + (float64(bg.G) * ai)),
-		B: uint8((float64(fg.B) * a) + (float64(bg.B) * ai)),
-		A: max(bg.A, fg.A),
+		R: blend(fg.R, bg.R),
+		G: blend(fg.G, bg.G),
+		B: blend(fg.B, bg.B),
+		A: uint8(oa*255 + 0.5),
 	}
 }
 
