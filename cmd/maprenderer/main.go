@@ -33,6 +33,7 @@ var output = flag.String("output", "map.png", "png to write to")
 var from_pos = flag.String("from", "0,0,0", "from-position to use, in 'x,y,z' format")
 var to_pos = flag.String("to", "100,100,100", "to-position to use, in 'x,y,z' format")
 var world_dir = flag.String("world", "./", "world directory")
+var transparency = flag.Bool("transparency", false, "render translucent nodes (water, glass) see-through, only for the 'isometric' type")
 
 func parsePos(str string) (*types.Pos, error) {
 	parts := strings.Split(str, ",")
@@ -171,6 +172,7 @@ func main() {
 	var img image.Image
 	if *map_type == "isometric" {
 		opts := maprenderer.NewDefaultIsoRenderOpts()
+		opts.EnableTransparency = *transparency
 		img, err = maprenderer.RenderIsometric(na, cm.GetColor, from, to, opts)
 	} else {
 		opts := maprenderer.NewDefaultMapRenderOpts()

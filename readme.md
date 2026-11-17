@@ -13,8 +13,10 @@ Luanti map renderer go-library and cli
 ## Isometric map
 
 ```sh
-./maprenderer -world /home/user/.luanti/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type isometric
+./maprenderer -world /home/user/.luanti/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type isometric -transparency
 ```
+
+Add `-transparency` to render translucent nodes (water, glass, ...) see-through.
 
 Example output:
 
@@ -23,7 +25,7 @@ Example output:
 ## Flat map
 
 ```sh
-./maprenderer -world /home/user/.luanti/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type map
+./maprenderer -world /home/user/.luanti/worlds/myworld/ -from -200,-50,-200 -to 200,100,200 -type map -transparency
 ```
 
 ![](./map_example.png)
