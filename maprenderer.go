@@ -17,6 +17,7 @@ func NewDefaultMapRenderOpts() *MapRenderOpts {
 func RenderMap(na types.NodeAccessor, cr types.ColorResolver, from, to *types.Pos, opts *MapRenderOpts) (*image.NRGBA, error) {
 	// from = lowest, to = highest
 	from, to = types.SortPos(from, to)
+	cr = cachedColorResolver(cr)
 	search_dir := &types.Pos{0, -1, 0}
 
 	// prepare image
@@ -48,7 +49,7 @@ func RenderMap(na types.NodeAccessor, cr types.ColorResolver, from, to *types.Po
 					if err != nil {
 						return nil, err
 					}
-					if nn != nil && cr(nn.Name, 0) != nil {
+					if isRenderable(nn) && cr(nn.Name, 0) != nil {
 						c = ColorAdjust(c, -10)
 					}
 				}
@@ -59,7 +60,7 @@ func RenderMap(na types.NodeAccessor, cr types.ColorResolver, from, to *types.Po
 					if err != nil {
 						return nil, err
 					}
-					if nn == nil || cr(nn.Name, 0) == nil {
+					if !isRenderable(nn) || cr(nn.Name, 0) == nil {
 						c = ColorAdjust(c, 10)
 					}
 				}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math"
 
 	"github.com/luanti-golang/types"
 )
@@ -54,6 +55,18 @@ func newPremultipliedColor(c color.Color) premultipliedColor {
 	return premultipliedColor{r: r, g: g, b: b, a: a}
 }
 
+// premultiplyNRGBA converts a non-premultiplied color without going through the color.Color interface
+func premultiplyNRGBA(c color.NRGBA) premultipliedColor {
+	// same as color.NRGBA.RGBA()
+	a := uint32(c.A) * 0x101
+	return premultipliedColor{
+		r: uint32(c.R) * 0x101 * a / 0xffff,
+		g: uint32(c.G) * 0x101 * a / 0xffff,
+		b: uint32(c.B) * 0x101 * a / 0xffff,
+		a: a,
+	}
+}
+
 // blendPixel composites the color over the existing pixel (porter-duff "over")
 func blendPixel(img *image.RGBA, x, y int, c premultipliedColor) {
 	if !(image.Point{X: x, Y: y}.In(img.Rect)) {
@@ -84,17 +97,26 @@ func blendPixel(img *image.RGBA, x, y int, c premultipliedColor) {
 // let the already drawn content shine through. Colors are interpreted according to their color.Color
 // implementation, use color.NRGBA for non-premultiplied colors.
 func DrawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, c1, c2, c3 color.Color) error {
+	err := validateCubeLen(cube_len)
+	if err != nil {
+		return err
+	}
+	drawIsoCube(img, cube_len, x_offset, y_offset, newPremultipliedColor(c1), newPremultipliedColor(c2), newPremultipliedColor(c3))
+	return nil
+}
+
+func validateCubeLen(cube_len int) error {
 	if cube_len%4 != 0 {
 		return fmt.Errorf("cube_len must be divisible by 4")
 	}
 	if cube_len <= 4 {
 		return fmt.Errorf("cube_len must be greater than 4")
 	}
+	return nil
+}
 
-	pc1 := newPremultipliedColor(c1)
-	pc2 := newPremultipliedColor(c2)
-	pc3 := newPremultipliedColor(c3)
-
+// drawIsoCube draws the cube without validating the cube length
+func drawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, pc1, pc2, pc3 premultipliedColor) {
 	half_len_zero_indexed := (cube_len / 2) - 1
 	quarter_len := cube_len / 4
 
@@ -128,7 +150,6 @@ func DrawIsoCube(img *image.RGBA, cube_len, x_offset, y_offset int, c1, c2, c3 c
 		}
 	}
 
-	return nil
 }
 
 func GetIsoNodeOrder(p *types.Pos) int {
@@ -143,6 +164,16 @@ func addAndClampUint8(a uint8, b int) uint8 {
 		return 0
 	} else {
 		return uint8(v)
+	}
+}
+
+// adjustNRGBA brightens or darkens the non-premultiplied color by the given value
+func adjustNRGBA(c color.NRGBA, value int) color.NRGBA {
+	return color.NRGBA{
+		R: addAndClampUint8(c.R, value),
+		G: addAndClampUint8(c.G, value),
+		B: addAndClampUint8(c.B, value),
+		A: c.A,
 	}
 }
 
@@ -184,4 +215,38 @@ func SortNodesWithColor(n1, n2 *NodeWithColor) int {
 	o1 := GetIsoNodeOrder(n1.Pos)
 	o2 := GetIsoNodeOrder(n2.Pos)
 	return o1 - o2
+}
+
+// sortNodesByIsoOrder sorts the nodes back-to-front for drawing (stable counting sort on GetIsoNodeOrder).
+// The order values of a render span a small range (sum of the dimensions), so this is O(n + range).
+func sortNodesByIsoOrder(nodes []*NodeWithColor) []*NodeWithColor {
+	if len(nodes) < 2 {
+		return nodes
+	}
+
+	orders := make([]int, len(nodes))
+	min_order, max_order := math.MaxInt, math.MinInt
+	for i, n := range nodes {
+		o := GetIsoNodeOrder(n.Pos)
+		orders[i] = o
+		min_order = min(min_order, o)
+		max_order = max(max_order, o)
+	}
+
+	// offsets[o] = start index of the order value o in the sorted output
+	offsets := make([]int, max_order-min_order+2)
+	for _, o := range orders {
+		offsets[o-min_order+1]++
+	}
+	for i := 1; i < len(offsets); i++ {
+		offsets[i] += offsets[i-1]
+	}
+
+	sorted := make([]*NodeWithColor, len(nodes))
+	for i, n := range nodes {
+		idx := orders[i] - min_order
+		sorted[offsets[idx]] = n
+		offsets[idx]++
+	}
+	return sorted
 }
